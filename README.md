@@ -1,2 +1,2 @@
-# Pojeto-Turismo-grupo7
+# Projeto-Turismo-grupo7
 aplicativo-viagens 

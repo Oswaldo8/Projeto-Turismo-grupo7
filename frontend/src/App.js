@@ -368,14 +368,96 @@ const handleSubmit = async (e) => {
                  </div>
                 </form>
               </>
-              
-            ) : 
+              ) : (
+              <div style={{ padding: '20px', textAlign: 'center', background: '#f8f9fa', borderRadius: '8px' }}>
+                <p style={{ color: '#666', margin: 0 }}>
+                  🔒 <strong>Apenas utilizadores registados podem cadastrar novos pontos turísticos.</strong><br/>
+                  Por favor, faça login ou crie uma conta para colaborar!
+                </p>
+              </div>
+            )}
+          </div>
 
-)}
+          {/* Mapa Interativo */}
+          <div className="card">
+            <h2>🗺️ Mapa de Pontos Turísticos</h2>
+            <div style={{ height: '400px', width: '100%' }}>
+              <MapContainer center={[-25.431, -49.271]} zoom={11} style={{ height: '100%', width: '100%' }}>
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                {locais.map((local) => (
+                  <Marker key={local.id} position={[parseFloat(local.latitude), parseFloat(local.longitude)]}>
+                    <Popup>
+                      <strong>{local.nome}</strong><br />
+                      {local.cidade}<br />
+                      <em>{local.categoria}</em><br />
+                      <button 
+                        onClick={() => setLocalSelecionado(local)} 
+                        style={{ marginTop: '5px', padding: '4px 8px', background: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                      >
+                        Ver Detalhes
+                      </button>
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+            </div>
+          </div>
+
+          {/* Lista / Tabela de Locais */}
+          <div className="card">
+            <h2>📋 Locais Cadastrados</h2>
+            {locais.length === 0 ? (
+              <p>Nenhum ponto turístico cadastrado ainda.</p>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Cidade</th>
+                    <th>Coordenadas</th>
+                    <th>Categoria</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {locais.map((local) => (
+                    <tr key={local.id}>
+                      <td>{local.nome}</td>
+                      <td>{local.cidade}</td>
+                      <td>{local.latitude}, {local.longitude}</td>
+                      <td>{local.categoria}</td>
+                      <td className="actions-cell">
+                        {usuario && (
+                          <>
+                            <button onClick={() => handleEdit(local)} className="btn-edit">
+                              Editar
+                            </button>
+                            <button onClick={() => handleDelete(local.id)} className="btn-delete">
+                              Eliminar
+                            </button>
+                          </>
+                        )}
+                        <button 
+                          onClick={() => setLocalSelecionado(local)} 
+                          className="btn-secondary"
+                          style={{ marginLeft: '5px', padding: '4px 8px', fontSize: '0.85em' }}
+                        >
+                          Ver Detalhes
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </>
       )}
     </div>
   );
 }
+            
 export default App;

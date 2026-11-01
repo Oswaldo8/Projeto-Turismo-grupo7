@@ -66,5 +66,139 @@ db.serialize(() => {
       pontuacao INTEGER,
       FOREIGN KEY(place_id) REFERENCES places(id)
     )
-  `);
+  `);// Registro Usuário
+app.post('/auth/register', (req, res) => {
+  const { nome, email, senha } = req.body;
+  const sql = `INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)`;
+  
+  db.run(sql, [nome, email, senha], function (err) {
+    if (err) {
+      return res.status(400).json({ error: 'Erro ao cadastrar usuário ou e-mail já existente.' });
+    }
+    res.status(201).json({ id: this.lastID, nome, email });
+  });
 });
+
+// Login Usuário
+app.post('/auth/login', (req, res) => {
+  const { email, senha } = req.body;
+  const sql = `SELECT * FROM usuarios WHERE email = ? AND senha = ?`;
+
+  db.get(sql, [email, senha], (err, row) => {
+    if (err || !row) {
+      return res.status(401).json({ error: 'E-mail ou senha incorretos.' });
+    }
+    res.json({ id: row.id, nome: row.nome, email: row.email });
+  });
+});
+
+// Listar todos os lugares
+app.get('/places', (req, res) => {
+  const sql = `SELECT * FROM places`;
+  db.all(sql, [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(rows);
+  });
+});
+});
+
+// Cadastrar novo lugar com imagem (Multer)
+app.post('/places', upload.single('imagem'), (req, res) => {
+  const { nome, cidade, latitude, longitude, categoria, usuario_id } = req.body;
+  const imagem_url = req.file ? `http://localhost:5000/uploads/${req.file.filename}` : null;
+
+  db.run(
+    `INSERT INTO places (nome, cidade, latitude, longitude, categoria, imagem_url, usuario_id) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [nome, cidade, latitude, longitude, categoria, imagem_url, usuario_id],
+    function(err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({ id: this.lastID, nome, cidade, latitude, longitude, categoria, imagem_url, usuario_id });
+    }
+  );
+});
+
+// Atualizar lugar (com suporte a alteração opcional de imagem)
+app.put('/places/:id', upload.single('imagem'), (req, res) => {
+  const { id } = req.params;
+  const { nome, cidade, latitude, longitude, categoria } = req.body;
+
+  if (req.file) {
+    const imagem_url = `http://localhost:5000/uploads/${req.file.filename}`;
+    const sql = `UPDATE places SET nome = ?, cidade = ?, latitude = ?, longitude = ?, categoria = ?, imagem_url = ? WHERE id = ?`;
+    
+    db.run(sql, [nome, cidade, latitude, longitude, categoria, imagem_url, id], function(err) {
+      if (err) {
+        return res.status(400).json({ error: err.message });
+      }
+      res.json({ message: 'Local atualizado com sucesso!', imagem_url });
+    });
+  } else {
+    const sql = `UPDATE places SET nome = ?, cidade = ?, latitude = ?, longitude = ?, categoria = ? WHERE id = ?`;
+    
+    db.run(sql, [nome, cidade, latitude, longitude, categoria, id], function(err) {
+      if (err) {
+        return res.status(400).json({ error: err.message });
+      }
+      res.json({ message: 'Local atualizado com sucesso!' });
+    });
+  }
+});
+
+// Deletar lugar
+app.delete('/places/:id', (req, res) => {
+  const { id } = req.params;
+  const sql = `DELETE FROM places WHERE id = ?`;
+
+  db.run(sql, id, function (err) {
+    if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+    res.json({ message: 'Local removido com sucesso!', id });
+  });
+});
+
+
+// Obter todas as avaliações de um ponto turístico específico
+app.get('/places/:id/reviews', (req, res) => {
+  const placeId = req.params.id;
+  db.all(`SELECT * FROM reviews WHERE place_id = ?`, [placeId], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(rows);
+  });
+});
+
+// Adicionar uma nova avaliação a um ponto turístico
+app.post('/places/:id/reviews', (req, res) => {
+  const placeId = req.params.id;
+  const { usuario_id, nome_usuario, comentario, pontuacao } = req.body;
+
+  db.run(
+    `INSERT INTO reviews (place_id, usuario_id, nome_usuario, comentario, pontuacao) VALUES (?, ?, ?, ?, ?)`,
+    [placeId, usuario_id, nome_usuario, comentario, pontuacao || 5],
+    function(err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({ 
+        id: this.lastID, 
+        place_id: placeId, 
+        usuario_id, 
+        nome_usuario, 
+        comentario, 
+        pontuacao: pontuacao || 5 
+      });
+    }
+  );
+});
+
+// Initiar servidor
+app.listen(PORT, () => {
+  console.log(`Servidor rodando com sucesso na porta ${PORT}`);
+});
+

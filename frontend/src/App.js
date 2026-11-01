@@ -133,6 +133,35 @@ const handleSubmit = async (e) => {
       console.error('Erro ao salvar local:', erro);
     }
   };
+  // Preencher formulário para Editar
+  const handleEdit = (local) => {
+    setEditId(local.id);
+    setFormData({
+      nome: local.nome,
+      cidade: local.cidade,
+      latitude: local.latitude,
+      longitude: local.longitude,
+      categoria: local.categoria
+    });
+  };
+
+  // Cancelar Edição
+  const handleCancelEdit = () => {
+    setEditId(null);
+    setFormData({ nome: '', cidade: '', latitude: '', longitude: '', categoria: '' });
+  };
+
+  // Eliminar local
+  const handleDelete = async (id) => {
+    if (window.confirm('Tem certeza que deseja eliminar este local?')) {
+      try {
+        await axios.delete(`${API_URL}/places/${id}`);
+        carregarLocais();
+      } catch (erro) {
+        console.error('Erro ao eliminar local:', erro);
+      }
+    }
+  };
 
 
 

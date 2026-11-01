@@ -163,35 +163,65 @@ const handleSubmit = async (e) => {
     }
   };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  return (
+   return (
+    
     <div className="container">
-      <h1>Guia Turístico Interativo</h1>
-      
+      <h1>📍 Guia Turístico Interativo</h1>
+
+      {/* Secção de Autenticação */}
+      <div className="card auth-card">
+        {usuario ? (
+          <div className="user-info">
+            <p>Sessão iniciada como: <strong>{usuario.nome}</strong> ({usuario.email})</p>
+            <button onClick={() => setUsuario(null)} className="btn-secondary">Sair</button>
+          </div>
+        ) : (
+          <div>
+            <h2>{isRegistering ? 'Cadastrar Usuário' : 'Iniciar Sessão'}</h2>
+            <form onSubmit={handleAuthSubmit} className="form-auth">
+              {isRegistering && (
+                <input
+                  type="text"
+                  placeholder="Nome completo"
+                  value={loginForm.nome}
+                  onChange={(e) => setLoginForm({ ...loginForm, nome: e.target.value })}
+                  required
+                />
+              )}
+              <input
+                type="email"
+                placeholder="E-mail"
+                value={loginForm.email}
+                onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                required
+              />
+              <input
+                type="password"
+                placeholder="Senha"
+                value={loginForm.senha}
+                onChange={(e) => setLoginForm({ ...loginForm, senha: e.target.value })}
+                required
+              />
+              <button type="submit">{isRegistering ? 'Cadastrar' : 'Entrar'}</button>
+            </form>
+            <button onClick={() => setIsRegistering(!isRegistering)} className="btn-toggle">
+              {isRegistering ? 'Já tem conta? Entre aqui' : 'Não tem conta? Cadastre-se'}
+            </button>
+          </div>
+        )}
+      </div>
+
+
+    
+
+
+
+
+)}
+          </div>
+        </>
+      )}
     </div>
   );
 }
-
 export default App;

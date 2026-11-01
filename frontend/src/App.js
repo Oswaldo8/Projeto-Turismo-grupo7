@@ -45,7 +45,94 @@ function App() {
     }
   };
 
+useEffect(() => {
+    carregarLocais();
+  }, []);
+// Carregar avaliações de um local
+  const carregarReviews = async (placeId) => {
+    try {
+      const resposta = await axios.get(`${API_URL}/places/${placeId}/reviews`);
+      setReviews(resposta.data);
+    } catch (erro) {
+      console.error('Erro ao carregar avaliações:', erro);
+    }
+  };
 
+  // Enviar nova avaliação
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!usuario) return alert('Faça login para enviar uma avaliação.');
+    try {
+      await axios.post(`${API_URL}/places/${localSelecionado.id}/reviews`, {
+        usuario_id: usuario.id,
+        nome_usuario: usuario.nome,
+        comentario: novoComentario.comentario,
+        pontuacao: Number(novoComentario.pontuacao)
+      });
+      alert('Avaliação enviada com sucesso!');
+      setNovoComentario({ comentario: '', pontuacao: 5 });
+      carregarReviews(localSelecionado.id);
+    } catch (erro) {
+      console.error('Erro ao enviar avaliação:', erro);
+      alert('Erro ao enviar avaliação.');
+    }
+  };
+
+  useEffect(() => {
+    if (localSelecionado) {
+      carregarReviews(localSelecionado.id);
+    }
+  }, [localSelecionado]);
+  // Gestão de Login e Registo
+  const handleAuthSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const endpoint = isRegistering ? '/auth/register' : '/auth/login';
+      const resposta = await axios.post(`${API_URL}${endpoint}`, loginForm);
+      setUsuario(resposta.data);
+      alert(isRegistering ? 'Usuário cadastrado com sucesso!' : `Bem-vindo(a), ${resposta.data.nome}!`);
+      setLoginForm({ nome: '', email: '', senha: '' });
+    } catch (erro) {
+      alert(erro.response?.data?.error || 'Erro na autenticação.');
+    }
+  };
+
+  // Guardar ou Editar Local
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const data = new FormData();
+      data.append('nome', formData.nome);
+      data.append('cidade', formData.cidade);
+      data.append('latitude', formData.latitude);
+      data.append('longitude', formData.longitude);
+      data.append('categoria', formData.categoria);
+      data.append('usuario_id', usuario ? usuario.id : null);
+      
+      if (imagemFile) {
+        data.append('imagem', imagemFile);
+      }
+
+      if (editId) {
+        await axios.put(`${API_URL}/places/${editId}`, data, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        alert('Ponto turístico atualizado!');
+        setEditId(null);
+      } else {
+        await axios.post(`${API_URL}/places`, data, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        alert('Ponto turístico cadastrado com sucesso!');
+      }
+
+      setFormData({ nome: '', cidade: '', latitude: '', longitude: '', categoria: '' });
+      setImagemFile(null);
+      carregarLocais();
+    } catch (erro) {
+      console.error('Erro ao salvar local:', erro);
+    }
+  };
 
 
 

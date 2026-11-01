@@ -1,38 +1,174 @@
-.App {
+/* ==========================================
+   ESTILOS GERAIS E CONTEINER
+   ========================================== */
+.container {
+  max-width: 1000px; /* Um pouco mais amplo para dar espaço ao layout */
+  margin: 40px auto;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; /* Tipografia mais moderna e limpa */
+  padding: 0 24px;
+  color: #1e293b; /* Cinza escuro em vez de preto puro para suavizar a visão */
+  background-color: #f8fafc; /* Fundo geral com um tom frio muito sutil */
+}
+
+h1 {
   text-align: center;
+  color: #0f172a;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+  margin-bottom: 32px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* ==========================================
+   CARTÕES (CARDS)
+   ========================================== */
+.card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0; /* Borda mais clara e fina */
+  border-radius: 12px; /* Cantos mais suaves e modernos */
+  padding: 28px;
+  margin-bottom: 28px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02); /* Sombra quase imperceptível, muito limpa */
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* Cartão de Autenticação / Filtro Destaque */
+.auth-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #0284c7; /* Azul clínico/cirúrgico para destacar */
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* ==========================================
+   FORMULÁRIOS E INPUTS
+   ========================================== */
+form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px; /* Mais espaço entre os campos */
+}
+
+form input {
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #334155;
+  background-color: #f8fafc;
+  transition: all 0.2s ease;
+}
+
+form input:focus {
+  outline: none;
+  border-color: #0284c7; /* Foco azul */
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+}
+
+.form-buttons {
+  grid-column: span 2;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.form-auth {
+  grid-template-columns: 1fr;
+}
+
+/* ==========================================
+   BOTÕES
+   ========================================== */
+/* Botão Principal (Verde Esterilização / Sucesso) */
+form button {
+  flex: 1;
+  padding: 12px 24px;
+  background-color: #10b981; /* Verde menta/clínico vibrante */
   color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
 }
 
-.App-link {
-  color: #61dafb;
+form button:hover {
+  background-color: #059669; /* Verde mais profundo ao passar o mouse */
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* Botão Secundário (Azul Claro / Neutro) */
+.btn-secondary {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.btn-secondary:hover {
+  background-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+/* Botão Link / Alternar */
+.btn-toggle {
+  background: none;
+  border: none;
+  color: #0284c7; /* Azul */
+  cursor: pointer;
+  margin-top: 12px;
+  text-decoration: none; /* Sem sublinhado para parecer mais limpo */
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0;
+}
+
+.btn-toggle:hover {
+  text-decoration: underline;
+}
+
+/* TABELAS DE DADOS MINIMALISTAS*/
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th, td {
+  border: none; /* Eliminamos bordas verticais pesadas */
+  border-bottom: 1px solid #f1f5f9; /* Apenas linhas divisórias horizontais muito finas */
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 14px;
+}
+
+th {
+  background-color: #f8fafc; /* Cabeçalho sutil */
+  color: #64748b; /* Texto do cabeçalho atenuado */
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+tr:hover td {
+  background-color: #f8fafc; /* Efeito hover sutil nas linhas */
+}
+
+/* AÇÕES DA TABELA (EDIÇÃO / STATUS) */
+.actions-cell {
+  display: flex;
+  gap: 8px;
+}
+
+/* Botão Editar (Alterado de Amarelo para... */
+
+form input::placeholder {
+  color: #94a3b8; /* Azul acinzentado suave (Slate 400) */
+  font-style: italic; /* uma leve inclinação para diferenciar mais do texto digitado */
+  opacity: 1; /* Garante a cor correta em navegadores como Firefox */
+}
+
+/* Transição suave quando o usuário clica para digitar */
+form input:focus::placeholder {
+  color: #cbd5e1; /* Fica ainda mais suave (um verde/azul acinzentado muito claro) ao focar */
+  transition: color 0.2s ease;
 }

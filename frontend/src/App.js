@@ -210,12 +210,166 @@ const handleSubmit = async (e) => {
           </div>
         )}
       </div>
+      {localSelecionado ? (
+        /* VISTA DE DETALHES */
+        <div className="card" style={{ padding: '25px', marginTop: '20px' }}>
+          <button 
+            onClick={() => setLocalSelecionado(null)} 
+            className="btn-secondary"
+            style={{ marginBottom: '20px', cursor: 'pointer' }}
+          >
+            ⬅️ Voltar à lista de locais
+          </button>
 
+          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+            <div style={{ flex: '1', minWidth: '300px' }}>
+              <span style={{ background: '#007bff', color: 'white', padding: '5px 10px', borderRadius: '4px' }}>
+                {localSelecionado.categoria}
+              </span>
+              <h1 style={{ marginTop: '10px' }}>{localSelecionado.nome}</h1>
+              <p>📍 <strong>Cidade:</strong> {localSelecionado.cidade}</p>
+              <p>🌐 <strong>Coordenadas:</strong> {localSelecionado.latitude}, {localSelecionado.longitude}</p>
 
-    
+              <div style={{ marginTop: '15px' }}>
+                <h3>📸 Galeria de Fotos</h3>
+                <img 
+                  src={localSelecionado.imagem_url || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&auto=format&fit=crop"} 
+                  alt={localSelecionado.nome} 
+                  style={{ width: '100%', maxHeight: '350px', objectFit: 'cover', borderRadius: '10px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }}
+                />
+              </div>
+            </div>
 
+<div style={{ flex: '1', minWidth: '300px', borderLeft: '1px solid #eee', paddingLeft: '20px' }}>
+              <h2>⭐ Avaliações e Reviews</h2>
 
+              {/* Lista dinâmica de avaliações vinda da base de dados */}
+              <div style={{ marginTop: '15px' }}>
+                {reviews.length === 0 ? (
+                  <p style={{ color: '#777' }}>Ainda não existem avaliações para este local. Sê o primeiro a avaliar!</p>
+                ) : (
+                  reviews.map((rev) => (
+                    <div key={rev.id} style={{ background: '#f8f9fa', padding: '12px', borderRadius: '8px', marginBottom: '10px' }}>
+                      <p style={{ margin: 0, fontWeight: 'bold' }}>👤 {rev.nome_usuario} { '⭐'.repeat(rev.pontuacao) }</p>
+                      <p style={{ margin: '5px 0 0 0', color: '#555' }}>"{rev.comentario}"</p>
+                    </div>
+                  ))
+                )}
+              </div>
 
+              {/* Formulário ligado ao handleReviewSubmit */}
+              {usuario ? (
+                <div style={{ marginTop: '20px', background: '#e9ecef', padding: '15px', borderRadius: '8px' }}>
+                  <h4>Deixe a sua avaliação</h4>
+                  <form onSubmit={handleReviewSubmit}>
+                    <div style={{ marginBottom: '10px' }}>
+                      <label style={{ marginRight: '10px', fontSize: '0.9em' }}>Classificação:</label>
+                      <select 
+                        value={novoComentario.pontuacao}
+                        onChange={(e) => setNovoComentario({ ...novoComentario, pontuacao: e.target.value })}
+                        style={{ padding: '5px', borderRadius: '4px' }}
+                      >
+                        <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                        <option value="4">⭐⭐⭐⭐ (4)</option>
+                        <option value="3">⭐⭐⭐ (3)</option>
+                        <option value="2">⭐⭐ (2)</option>
+                        <option value="1">⭐ (1)</option>
+                      </select>
+                    </div>
+                    <textarea 
+                      placeholder="Escreva o seu comentário sobre este local..." 
+                      rows="3" 
+                      value={novoComentario.comentario}
+                      onChange={(e) => setNovoComentario({ ...novoComentario, comentario: e.target.value })}
+                      style={{ width: '100%', padding: '8px', borderRadius: '5px', border: '1px solid #ccc', marginBottom: '10px' }}
+                      required
+                    />
+                    <button type="submit" className="btn-primary">
+                      Enviar Avaliação
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <p style={{ color: '#777', fontSize: '0.9em', marginTop: '15px' }}>
+                  🔒 Faça login para deixar uma avaliação sobre este ponto turístico.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>  
+      ) : (
+        <>
+          {/* Formulário de Cadastro / Edição */}
+          <div className="card">
+            {usuario ? (
+              <>
+                <h2>{editId ? '✏️ Editar Ponto Turístico' : '➕ Cadastrar Novo Ponto Turístico'}</h2>
+                <form onSubmit={handleSubmit}>
+                  <input 
+                    type="text" 
+                    placeholder="Nome do local" 
+                    value={formData.nome} 
+                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })} 
+                    required 
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="Cidade" 
+                    value={formData.cidade} 
+                    onChange={(e) => setFormData({ ...formData, cidade: e.target.value })} 
+                    required 
+                  />
+                  <input 
+                    type="number" 
+                    step="any" 
+                    placeholder="Latitude" 
+                    value={formData.latitude} 
+                    onChange={(e) => setFormData({ ...formData, latitude: e.target.value })} 
+                    required 
+                  />
+                  <input 
+                    type="number" 
+                    step="any" 
+                    placeholder="Longitude" 
+                    value={formData.longitude} 
+                    onChange={(e) => setFormData({ ...formData, longitude: e.target.value })} 
+                    required 
+                  />
+                  <select 
+                    value={formData.categoria} 
+                    onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
+                    required
+                  >
+                    <option value="">Selecione a categoria...</option>
+                    <option value="Parque">Parque</option>
+                    <option value="Museu">Museu</option>
+                    <option value="Monumento">Monumento</option>
+                    <option value="Praia">Praia</option>
+                    <option value="Trilha">Trilha</option>
+                  </select>
+
+                  <button type="submit">
+                    {editId ? 'Atualizar Local' : 'Guardar Local'}
+                  </button>
+                  
+                  {editId && (
+                    <button type="button" onClick={handleCancelEdit} className="btn-secondary">
+                      Cancelar
+                    </button>
+                  )}
+                  <div style={{ marginBottom: '10px' }}>
+                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9em', color: '#555' }}>Foto do local:</label>
+                  <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={(e) => setImagemFile(e.target.files[0])} 
+                  style={{ width: '100%', padding: '5px' }}
+                  />
+                 </div>
+                </form>
+              </>
+              
+            ) : 
 
 )}
           </div>

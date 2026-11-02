@@ -66,7 +66,9 @@ db.serialize(() => {
       pontuacao INTEGER,
       FOREIGN KEY(place_id) REFERENCES places(id)
     )
-  `);// Registro Usuário
+      `);
+  });
+      // Registro Usuário
 app.post('/auth/register', (req, res) => {
   const { nome, email, senha } = req.body;
   const sql = `INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)`;
@@ -102,23 +104,36 @@ app.get('/places', (req, res) => {
     res.json(rows);
   });
 });
-});
 
 // Cadastrar novo lugar com imagem (Multer)
 app.post('/places', upload.single('imagem'), (req, res) => {
   const { nome, cidade, latitude, longitude, categoria, usuario_id } = req.body;
-  const imagem_url = req.file ? `http://localhost:5000/uploads/${req.file.filename}` : null;
-
-  db.run(
-    `INSERT INTO places (nome, cidade, latitude, longitude, categoria, imagem_url, usuario_id) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [nome, cidade, latitude, longitude, categoria, imagem_url, usuario_id],
-    function(err) {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      res.json({ id: this.lastID, nome, cidade, latitude, longitude, categoria, imagem_url, usuario_id });
+  // Verifica se já existe um local com o mesmo nome na mesma cidade
+  const checkSql = `SELECT * FROM places WHERE LOWER(nome) = LOWER(?) AND LOWER(cidade) = LOWER(?)`;
+  
+  db.get(checkSql, [nome, cidade], (err, row) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
     }
-  );
+    if (row) {
+      return res.status(400).json({ error: 'Este ponto turístico já está registrado nesta cidade!' });
+    }
+
+    // Se não existir, prossegue com o insert normal
+    const imagem_url = req.file ? `http://localhost:5000/uploads/${req.file.filename}` : null;
+    const insertSql = `INSERT INTO places (nome, cidade, latitude, longitude, categoria, imagem_url, usuario_id) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+
+    db.run(
+      insertSql,
+      [nome, cidade, latitude, longitude, categoria, imagem_url, usuario_id],
+      function(err) {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+        res.json({ id: this.lastID, nome, cidade, latitude, longitude, categoria, imagem_url, usuario_id });
+      }
+    );
+  });
 });
 
 // Atualizar lugar (com suporte a alteração opcional de imagem)

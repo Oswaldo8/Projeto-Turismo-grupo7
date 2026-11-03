@@ -141,16 +141,31 @@ app.put('/places/:id', upload.single('imagem'), (req, res) => {
   const { id } = req.params;
   const { nome, cidade, latitude, longitude, categoria } = req.body;
 
-  if (req.file) {
-    const imagem_url = `http://localhost:5000/uploads/${req.file.filename}`;
-    const sql = `UPDATE places SET nome = ?, cidade = ?, latitude = ?, longitude = ?, categoria = ?, imagem_url = ? WHERE id = ?`;
-    
-    db.run(sql, [nome, cidade, latitude, longitude, categoria, imagem_url, id], function(err) {
-      if (err) {
-        return res.status(400).json({ error: err.message });
-      }
-      res.json({ message: 'Local atualizado com sucesso!', imagem_url });
-    });
+ // 1. Primeiro buscamos o lugar para verificar quem é o propietario
+  db.get(`SELECT * FROM places WHERE id = ?`, [id], (err, place) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    if (!place) {
+      return res.status(404).json({ error: 'Ponto turístico não encontrado.' });
+    }
+
+    // 2. Verificamos se o usuario atual é o dono do registro
+    if (place.usuario_id !== Number(usuario_id)) {
+      return res.status(403).json({ error: 'Apenas o usuário que cadastrou este local pode editá-lo!' });
+    }
+
+    // 3. Se é o dono, procedemos a atualizar com ou sem imagem
+    if (req.file) {
+      const imagem_url = `http://localhost:5000/uploads/${req.file.filename}`;
+      const sql = `UPDATE places SET nome = ?, cidade = ?, latitude = ?, longitude = ?, categoria = ?, imagem_url = ? WHERE id = ?`;
+      
+      db.run(sql, [nome, cidade, latitude, longitude, categoria, imagem_url, id], function(err) {
+        if (err) {
+          return res.status(400).json({ error: err.message });
+        }
+        res.json({ message: 'Local atualizado com sucesso!', imagem_url });
+      });
   } else {
     const sql = `UPDATE places SET nome = ?, cidade = ?, latitude = ?, longitude = ?, categoria = ? WHERE id = ?`;
     
@@ -161,6 +176,7 @@ app.put('/places/:id', upload.single('imagem'), (req, res) => {
       res.json({ message: 'Local atualizado com sucesso!' });
     });
   }
+  });
 });
 
 // Deletar lugar
@@ -168,11 +184,28 @@ app.delete('/places/:id', (req, res) => {
   const { id } = req.params;
   const sql = `DELETE FROM places WHERE id = ?`;
 
-  db.run(sql, id, function (err) {
+ //  procuramos o ponto para verificar o usuário que o cadastrou
+  db.get(`SELECT * FROM places WHERE id = ?`, [id], (err, place) => {
     if (err) {
-      return res.status(400).json({ error: err.message });
+      return res.status(500).json({ error: err.message });
     }
-    res.json({ message: 'Local removido com sucesso!', id });
+    if (!place) {
+      return res.status(404).json({ error: 'Ponto turístico não encontrado.' });
+    }
+
+    // 2. Verificamos se coincide o criador
+    if (place.usuario_id !== Number(usuario_id)) {
+      return res.status(403).json({ error: 'Apenas o usuário que cadastrou este local pode excluí-lo!' });
+    }
+
+    // Se for o criador, deletamos
+    const sql = `DELETE FROM places WHERE id = ?`;
+    db.run(sql, id, function (err) {
+      if (err) {
+        return res.status(400).json({ error: err.message });
+      }
+      res.json({ message: 'Local removido com sucesso!', id });
+    });
   });
 });
 

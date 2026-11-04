@@ -17,7 +17,8 @@ function App() {
   const API_URL = 'http://localhost:5000';
   const [locais, setLocais] = useState([]);
   const [usuario, setUsuario] = useState(null);
-  const [localSelecionado, setLocalSelecionado] = useState(null);
+  const [view, setView] = useState('mapa');
+  const [detalhesLocal, setDetalhesLocal] = useState(null);
   
   // Estado para Formulário de Login/Registo
   const [loginForm, setLoginForm] = useState({ nome: '', email: '', senha: '' });
@@ -49,12 +50,13 @@ useEffect(() => {
     carregarLocais();
   }, []);
 // Carregar avaliações de um local
-  const carregarReviews = async (placeId) => {
+  const carregarDetalhesLocal = async (id) => {
     try {
-      const resposta = await axios.get(`${API_URL}/places/${placeId}/reviews`);
-      setReviews(resposta.data);
+      const resposta = await axios.get(`${API_URL}/places/${id}`);
+      setDetalhesLocal(resposta.data);
+      setview('detalhes');
     } catch (erro) {
-      console.error('Erro ao carregar avaliações:', erro);
+      console.error('Erro ao carregar detalhes do local:', erro);
     }
   };
 
@@ -63,7 +65,7 @@ useEffect(() => {
     e.preventDefault();
     if (!usuario) return alert('Faça login para enviar uma avaliação.');
     try {
-      await axios.post(`${API_URL}/places/${localSelecionado.id}/reviews`, {
+      await axios.post(`${API_URL}/places/${detalhesLocal.id}/reviews`, {
         usuario_id: usuario.id,
         nome_usuario: usuario.nome,
         comentario: novoComentario.comentario,
@@ -71,18 +73,13 @@ useEffect(() => {
       });
       alert('Avaliação enviada com sucesso!');
       setNovoComentario({ comentario: '', pontuacao: 5 });
-      carregarReviews(localSelecionado.id);
+      carregarDetalhesLocal(detalhesLocal.id);
     } catch (erro) {
       console.error('Erro ao enviar avaliação:', erro);
       alert('Erro ao enviar avaliação.');
     }
   };
 
-  useEffect(() => {
-    if (localSelecionado) {
-      carregarReviews(localSelecionado.id);
-    }
-  }, [localSelecionado]);
   // Gestão de Login e Registo
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
@@ -109,8 +106,11 @@ const handleSubmit = async (e) => {
       data.append('categoria', formData.categoria);
       data.append('usuario_id', usuario ? usuario.id : null);
       
-      if (imagemFile) {
-        data.append('imagem', imagemFile);
+     // Anexar múltiplas imagens selecionadas
+    if (imagensFiles && imagensFiles.length > 0) {
+    for (let i = 0; i < imagensFiles.length; i++) {
+        data.append('imagem', imagensFiles[i]);
+        }
       }
 
       if (editId) {
@@ -127,7 +127,7 @@ const handleSubmit = async (e) => {
       }
 
       setFormData({ nome: '', cidade: '', latitude: '', longitude: '', categoria: '' });
-      setImagemFile(null);
+      setImagensFiles([]);
       carregarLocais();
     } catch (erro) {
       console.error('Erro ao salvar local:', erro);
@@ -155,7 +155,7 @@ const handleSubmit = async (e) => {
   const handleDelete = async (id) => {
     if (window.confirm('Tem certeza que deseja eliminar este local?')) {
       try {
-        await axios.delete(`${API_URL}/places/${id}`);
+        await axios.delete(`${API_URL}/places/${id}`, { data: { usuario_id: usuario?.id } });
         carregarLocais();
       } catch (erro) {
         console.error('Erro ao eliminar local:', erro);

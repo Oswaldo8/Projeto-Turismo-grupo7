@@ -67,6 +67,14 @@ db.serialize(() => {
       FOREIGN KEY(place_id) REFERENCES places(id)
     )
       `);
+  db.run(`
+    CREATE TABLE IF NOT EXISTS place_images (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        place_id INTEGER,
+        image_url TEXT,
+        FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE
+    )
+`);
   });
       // Registro Usuário
 app.post('/auth/register', (req, res) => {
@@ -96,13 +104,21 @@ app.post('/auth/login', (req, res) => {
 
 // Listar todos os lugares
 app.get('/places', (req, res) => {
-  const sql = `SELECT * FROM places`;
-  db.all(sql, [], (err, rows) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
+    const { nome } = req.query;
+    let sql = 'SELECT * FROM places';
+    let params = [];
+
+    if (nome) {
+        sql += ' WHERE LOWER(nome) LIKE LOWER(?)';
+        params.push(`%${nome}%`);
     }
-    res.json(rows);
-  });
+
+    db.all(sql, params, (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(rows);
+    });
 });
 
 // Cadastrar novo lugar com imagem (Multer)

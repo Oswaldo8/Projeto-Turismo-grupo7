@@ -14,7 +14,7 @@ L.Icon.Default.mergeOptions({
 });
 
 function App() {
-  const API_URL = 'http://localhost:5000';
+  const API_URL = 'https://backend-turismo-qf13.onrender.com';
   const [locais, setLocais] = useState([]);
   const [usuario, setUsuario] = useState(null);
   const [view, setView] = useState('mapa'); // 'mapa', 'login', 'detalhes'

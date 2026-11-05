@@ -6,7 +6,7 @@ const PORT = 5000;
 const multer = require('multer');
 const path = require('path');
 
-// Configuraçao do almacenamento do Multer para las imágenes
+// Configuração do armazenamento do Multer para as imagens
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'uploads/');
@@ -15,7 +15,6 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + path.extname(file.originalname));
   }
 });
-const upload = multer({ storage: storage });
 
 // Middlewares
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -122,9 +121,9 @@ app.get('/places', (req, res) => {
 });
 
 // Cadastrar novo lugar com imagem (Multer)
-app.post('/places', upload.array('imagem', 10), (req, res) => {
+app.post('/places', multer({ storage: storage }).array('imagem', 10), (req, res) => {
   const { nome, cidade, latitude, longitude, categoria, usuario_id } = req.body;
-  // Verifica se já existe um local com o mesmo nome na mesma cidade
+  
   const checkSql = `SELECT * FROM places WHERE LOWER(nome) = LOWER(?) AND LOWER(cidade) = LOWER(?)`;
   
   db.get(checkSql, [nome, cidade], (err, row) => {
@@ -132,36 +131,33 @@ app.post('/places', upload.array('imagem', 10), (req, res) => {
       return res.status(500).json({ error: err.message });
     }
     if (row) {
-      return res.status(400).json({ error: 'Este ponto turístico já está registrado nesta cidade!' });
+      return res.status(400).json({ error: 'Este ponto turístico já está registado nesta cidade!' });
     }
 
-    // Se não existir, prossegue com o insert normal
-    const imagem_url = req.file ? `http://localhost:5000/uploads/${req.file.filename}` : null;
     const insertSql = `INSERT INTO places (nome, cidade, latitude, longitude, categoria, usuario_id) VALUES (?, ?, ?, ?, ?, ?)`;
-
-    db.run(
-      insertSql,
-      [nome, cidade, latitude, longitude, categoria, usuario_id],
-      function(err) {
-        if (err) {
-          return res.status(500).json({ error: err.message });
-        }
-        const placeId = this.lastID;
-        if (req.files && req.files.length > 0) {
-            const insertImageSql = `INSERT INTO place_images (place_id, image_url) VALUES (?, ?)`;
-            req.files.forEach(file => {
-                const imageUrl = `http://localhost:5000/uploads/${file.filename}`;
-                db.run(insertImageSql, [placeId, imageUrl]);
-            });
-        }
-        res.json({ id: this.lastID, nome, cidade, latitude, longitude, categoria, usuario_id });
+    
+    db.run(insertSql, [nome, cidade, latitude, longitude, categoria, usuario_id], function(err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
       }
-    );
+
+      const placeId = this.lastID;
+
+      if (req.files && req.files.length > 0) {
+        const imageInsertSql = `INSERT INTO place_images (place_id, image_url) VALUES (?, ?)`;
+        req.files.forEach(file => {
+          const image_url = `/uploads/${file.filename}`;
+          db.run(imageInsertSql, [placeId, image_url]);
+        });
+      }
+
+      res.json({ message: 'Ponto turístico cadastrado com sucesso!', id: placeId });
+    });
   });
 });
 
 // Atualizar lugar (com suporte a alteração de imagens)
-app.put('/places/:id', upload.array('imagem', 10), (req, res) => {
+app.put('/places/:id', multer({ storage: storage }).array('imagem', 10), (req, res) => {
   const { id } = req.params;
   const { nome, cidade, latitude, longitude, categoria, usuario_id } = req.body;
 
@@ -191,11 +187,10 @@ app.put('/places/:id', upload.array('imagem', 10), (req, res) => {
       if (req.files && req.files.length > 0) {
         const insertImageSql = `INSERT INTO place_images (place_id, image_url) VALUES (?, ?)`;
         req.files.forEach(file => {
-          const imageUrl = `http://localhost:5000/uploads/${file.filename}`;
-          db.run(insertImageSql, [id, imageUrl]);
+          const image_url = `/uploads/${file.filename}`;
+          db.run(insertImageSql, [id, image_url]);
         });
       }
-
       res.json({ message: 'Local atualizado com sucesso!' });
     });
   });
@@ -228,13 +223,12 @@ app.delete('/places/:id', (req, res) => {
   });
 });
 
-// Obter detalhes de um ponto turístico específico com suas imagens e reviews
 app.get('/places/:id', (req, res) => {
     const placeId = req.params.id;
 
     const placeSql = `SELECT * FROM places WHERE id = ?`;
     db.get(placeSql, [placeId], (err, place) => {
-        if (err) return res.status(500).json({ error: err.number || 500 }).json({ error: err.message });
+        if (err) return res.status(500).json({ error: err.message }); // Corrigido o erro duplo
         if (!place) return res.status(404).json({ error: 'Ponto turístico não encontrado.' });
 
         // Buscar imagens do lugar na tabela place_images
@@ -247,7 +241,7 @@ app.get('/places/:id', (req, res) => {
 
                 res.json({
                     ...place,
-                    imagens: images.map(img => img.image_url),
+                    imagens: images,
                     reviews: reviews
                 });
             });

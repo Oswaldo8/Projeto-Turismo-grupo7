@@ -5,7 +5,12 @@ const app = express();
 const PORT = 5000;
 const multer = require('multer');
 const path = require('path');
-
+const fs = require('fs');
+// Garantir que a pasta uploads existe no servidor
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 // Configuração do armazenamento do Multer para as imagens
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
